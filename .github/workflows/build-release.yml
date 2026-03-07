@@ -54,6 +54,12 @@ jobs:
           name: flatpak-${{ matrix.file_arch }}
           path: "*.flatpak"
 
+      - name: Upload Repo Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-${{ matrix.file_arch }}
+          path: repo
+
   deploy-pages:
     needs: build
     runs-on: ubuntu-latest
@@ -61,28 +67,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download all artifacts
+      - name: Download repo artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          merge-multiple: true
 
       - name: Install flatpak
         run: |
           sudo apt-get update
           sudo apt-get install -y flatpak ostree
 
-      - name: Build repo structure from bundles
+      - name: Build repo structure from architectures
         run: |
           mkdir -p ${{ env.FLATPAK_REPO_DIR }}
 
-          # Initialize ostree repo
+          # Initialize combined ostree repo
           ostree init --mode=archive-z2 --repo=${{ env.FLATPAK_REPO_DIR }}
 
-          # Import the flatpak bundles into the repo using ostree pull-local
-          for bundle in artifacts/*.flatpak; do
-            echo "Importing $bundle..."
-            ostree pull-local --repo=${{ env.FLATPAK_REPO_DIR }} "$bundle"
+          # Pull from each architecture's repo (artifacts are in repo-*/ subdirectories)
+          for arch_dir in artifacts/repo-*/; do
+            echo "Merging $arch_dir..."
+            ostree pull-local --repo=${{ env.FLATPAK_REPO_DIR }} "$arch_dir"
           done
 
           # Update repo with static deltas (generates summary file)
@@ -134,7 +139,15 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          pattern: flatpak-*
           merge-multiple: true
+
+      - name: Delete existing release if exists
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          gh release delete "$VERSION" --yes --cleanup-tag || true
 
       - name: Create release
         env:
