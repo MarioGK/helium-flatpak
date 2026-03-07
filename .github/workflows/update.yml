@@ -1,0 +1,53 @@
+name: Update Helium
+
+on:
+  schedule:
+    - cron: "0 8 * * *" # runs every day at 08:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check-and-update:
+    runs-on: ubuntu-latest
+    outputs:
+      changes_detected: ${{ steps.check.outputs.changes_detected }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run update script
+        run: bash ./grab_latest.sh
+
+      - name: Check and Commit
+        id: check
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [[ -n $(git status -s net.imput.helium.yml) ]]; then
+            VERSION=$(grep -m1 'version:' version.txt | awk '{print $2}')
+            echo "changes_detected=true" >> "$GITHUB_OUTPUT"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            git add net.imput.helium.yml net.imput.helium.metainfo.xml version.txt
+            git commit -m "update: helium $VERSION"
+            git push origin HEAD:main
+            echo "Committed update for Helium $VERSION"
+          else
+            echo "changes_detected=false" >> "$GITHUB_OUTPUT"
+            echo "No changes detected"
+          fi
+
+  notify:
+    needs: check-and-update
+    runs-on: ubuntu-latest
+    if: needs.check-and-update.outputs.changes_detected == 'true'
+    steps:
+      - name: Log update
+        run: |
+          echo "Helium ${{ needs.check-and-update.outputs.version }} update pushed to main"
+          echo "The build-release workflow will be triggered automatically by the push event."

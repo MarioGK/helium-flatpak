@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+  <id>net.imput.helium</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>BSD-3-Clause</project_license>
+
+  <name>Helium Browser</name>
+  <summary>Private, fast, and honest web browser</summary>
+
+  <description>
+    <p>
+      Helium is a lightweight and privacy-friendly Chromium-based web browser
+      focused on speed, simplicity, and clean design.
+      It ships without telemetry, ads, tracking, or analytics.
+    </p>
+    <p>
+      This Flatpak package contains the official prebuilt binary from the
+      upstream project <code>helium-linux</code>.
+    </p>
+  </description>
+
+  <developer id="io.github.imputnet">
+    <name>imputnet</name>
+  </developer>
+
+  <url type="homepage">https://github.com/imputnet/helium</url>
+  <url type="bugtracker">https://github.com/imputnet/helium/issues</url>
+  <url type="help">https://github.com/imputnet/helium</url>
+
+  <launchable type="desktop-id">net.imput.helium.desktop</launchable>
+
+  <screenshots>
+    <screenshot type="default">
+      <image>https://helium.computer/screenshots/lead.avif</image>
+    </screenshot>
+    <screenshot>
+      <image>https://helium.computer/screenshots/split-view.avif</image>
+    </screenshot>
+  </screenshots>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="0.9.4.1" date="2026-02-24">
+      <description>
+        <p>Automated Flatpak metadata</p>
+      </description>
+    </release>
+  </releases>
+
+  <provides>
+    <binary>helium</binary>
+  </provides>
+</component>

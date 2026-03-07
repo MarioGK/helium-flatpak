@@ -1,0 +1,168 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'net.imput.helium.yml'
+      - 'net.imput.helium.metainfo.xml'
+      - 'version.txt'
+      - '.github/workflows/build-release.yml'
+  workflow_dispatch:
+  release:
+    types: [published]
+
+env:
+  FLATPAK_REPO_DIR: repo
+
+jobs:
+  build:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - flatpak_arch: x86_64
+            file_arch: x86_64
+            runner: ubuntu-latest
+          - flatpak_arch: aarch64
+            file_arch: arm64
+            runner: ubuntu-24.04-arm
+      fail-fast: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get version
+        id: version
+        run: echo "version=$(grep -m1 'version:' version.txt | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          manifest-path: net.imput.helium.yml
+          arch: ${{ matrix.flatpak_arch }}
+          build-bundle: true
+          bundle: helium-${{ steps.version.outputs.version }}-${{ matrix.file_arch }}.flatpak
+          cache: true
+          cache-key: flatpak-builder-${{ matrix.flatpak_arch }}-${{ github.sha }}
+          restore-keys: flatpak-builder-${{ matrix.flatpak_arch }}-
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flatpak-${{ matrix.file_arch }}
+          path: "*.flatpak"
+
+  deploy-pages:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Install flatpak
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak ostree
+
+      - name: Build repo structure from bundles
+        run: |
+          mkdir -p ${{ env.FLATPAK_REPO_DIR }}
+
+          # Initialize ostree repo
+          ostree init --mode=archive-z2 --repo=${{ env.FLATPAK_REPO_DIR }}
+
+          # Import the flatpak bundles into the repo
+          for bundle in artifacts/*.flatpak; do
+            echo "Importing $bundle..."
+            flatpak build-import ${{ env.FLATPAK_REPO_DIR }} "$bundle"
+          done
+
+          # Update repo with static deltas (generates summary file)
+          flatpak build-update-repo ${{ env.FLATPAK_REPO_DIR }} --generate-static-deltas
+
+      - name: Copy repository files
+        run: |
+          cp helium.flatpakrepo ${{ env.FLATPAK_REPO_DIR }}/
+          cp helium.flatpakref ${{ env.FLATPAK_REPO_DIR }}/ 2>/dev/null || true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.FLATPAK_REPO_DIR }}
+
+  deploy-to-pages:
+    needs: deploy-pages
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  create-release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(grep -m1 'version:' version.txt | awk '{print $2}')
+          IS_PRERELEASE=$(grep -m1 'prerelease:' version.txt | awk '{print $2}')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          IS_PRERELEASE="${{ steps.version.outputs.is_prerelease }}"
+          FLAGS=""
+          if [[ "$IS_PRERELEASE" == "true" ]]; then FLAGS="--prerelease"; fi
+
+          gh release create "$VERSION" \
+            artifacts/*.flatpak \
+            --target main \
+            --title "Helium $VERSION" \
+            --notes "Automated update to Helium version $VERSION
+
+            ## Installation
+
+            **Option 1: Install from repository (Recommended)**
+            \`\`\`bash
+            flatpak remote-add --user --if-not-exists helium https://mariogk.github.io/helium-flatpak/helium.flatpakrepo
+            flatpak install --user helium net.imput.helium
+            \`\`\`
+
+            **Option 2: Install from bundle**
+            Download the \`.flatpak\` file for your architecture and run:
+            \`\`\`bash
+            flatpak install --user helium-*.flatpak
+            \`\`\`
+
+            ### What's Changed
+            See [Helium release notes](https://github.com/imputnet/helium-linux/releases/tag/$VERSION) for details." \
+            $FLAGS

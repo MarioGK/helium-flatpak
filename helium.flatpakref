@@ -1,0 +1,11 @@
+[Flatpak Ref]
+Title=Helium Browser
+Name=net.imput.helium
+Branch=stable
+Url=https://mariogk.github.io/helium-flatpak/repo/
+SuggestRemoteName=helium
+Homepage=https://github.com/MarioGK/helium-flatpak
+Comment=Private, fast, and honest web browser
+Description=Helium is a lightweight, privacy-focused browser built upon Ungoogled Chromium
+RuntimeRepo=https://dl.flathub.org/repo/flathub.flatpakrepo
+IsRuntime=false
