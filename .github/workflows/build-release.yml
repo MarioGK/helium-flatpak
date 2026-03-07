@@ -44,7 +44,6 @@ jobs:
           bundle: helium-${{ steps.version.outputs.version }}-${{ matrix.file_arch }}.flatpak
           cache: true
           cache-key: flatpak-builder-${{ matrix.flatpak_arch }}-${{ github.sha }}
-          restore-cache: flatpak-builder-${{ matrix.flatpak_arch }}-
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
