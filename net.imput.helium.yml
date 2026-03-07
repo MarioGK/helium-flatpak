@@ -3,7 +3,6 @@ runtime: org.freedesktop.Platform
 runtime-version: "24.08"
 sdk: org.freedesktop.Sdk
 command: helium
-supported-arches: [x86_64, aarch64]
 
 x-annotations:
   org.flatpak.metadata.name: "Helium"
@@ -62,14 +61,13 @@ finish-args:
 
 modules:
   - name: helium
-    metadata: net.imput.helium.metainfo.xml
     buildsystem: simple
     build-commands:
       - mkdir -p /app/lib/helium
       - mkdir -p /app/bin
-      
+
       - tar -xvf helium-linux.tar.xz -C /app/lib/helium --strip-components=1 --no-same-owner
-      
+
       - mv /app/lib/helium/helium /app/lib/helium/helium.real
       - chmod +x /app/lib/helium/helium.real
 
@@ -78,6 +76,7 @@ modules:
       - chmod +x /app/bin/helium
 
       - install -Dm644 net.imput.helium.desktop /app/share/applications/net.imput.helium.desktop
+      - install -Dm644 net.imput.helium.metainfo.xml /app/share/metainfo/net.imput.helium.metainfo.xml
 
       - mkdir -p icons/512x512 icons/256x256 icons/128x128 icons/64x64 icons/32x32
       - cp net.imput.helium.png icons/512x512/ || true
