@@ -18,12 +18,15 @@ env:
 jobs:
   build:
     runs-on: ${{ matrix.runner }}
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-48
+      options: --privileged
     strategy:
       matrix:
         include:
           - flatpak_arch: x86_64
             file_arch: x86_64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
           - flatpak_arch: aarch64
             file_arch: arm64
             runner: ubuntu-24.04-arm
