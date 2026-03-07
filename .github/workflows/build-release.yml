@@ -77,7 +77,7 @@ jobs:
       - name: Install flatpak
         run: |
           sudo apt-get update
-          sudo apt-get install -y flatpak
+          sudo apt-get install -y flatpak ostree
 
       - name: Build repo structure from bundles
         run: |
