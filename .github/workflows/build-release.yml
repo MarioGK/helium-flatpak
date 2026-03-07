@@ -79,10 +79,10 @@ jobs:
           # Initialize ostree repo
           ostree init --mode=archive-z2 --repo=${{ env.FLATPAK_REPO_DIR }}
 
-          # Import the flatpak bundles into the repo
+          # Import the flatpak bundles into the repo using ostree pull-local
           for bundle in artifacts/*.flatpak; do
             echo "Importing $bundle..."
-            flatpak build-import ${{ env.FLATPAK_REPO_DIR }} "$bundle"
+            ostree pull-local --repo=${{ env.FLATPAK_REPO_DIR }} "$bundle"
           done
 
           # Update repo with static deltas (generates summary file)
