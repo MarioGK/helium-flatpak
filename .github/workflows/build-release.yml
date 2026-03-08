@@ -67,11 +67,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download bundle artifacts
+      - name: Download repo artifacts
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
-          pattern: flatpak-*
+          path: repos
+          pattern: repo-*
           merge-multiple: true
 
       - name: Install flatpak
@@ -79,20 +79,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y flatpak ostree
 
-      - name: Build repo structure from bundles
+      - name: Merge repos and update
         run: |
-          mkdir -p ${{ env.FLATPAK_REPO_DIR }}
-
-          # Initialize ostree repo
+          # Initialize the main repo
           ostree init --mode=archive-z2 --repo=${{ env.FLATPAK_REPO_DIR }}
 
-          # Import each bundle into the repo
-          for bundle in artifacts/*.flatpak; do
-            echo "Importing $bundle..."
-            flatpak build-import-bundle ${{ env.FLATPAK_REPO_DIR }} "$bundle"
+          # Merge each architecture's repo using pull-local
+          for repo_dir in repos/repo-*; do
+            if [ -d "$repo_dir" ]; then
+              echo "Merging $repo_dir..."
+              ostree pull-local "$repo_dir" --repo=${{ env.FLATPAK_REPO_DIR }}
+            fi
           done
 
-          # Update repo with static deltas (generates summary file)
+          # Update repo summary and generate static deltas
           flatpak build-update-repo ${{ env.FLATPAK_REPO_DIR }} --generate-static-deltas
 
       - name: Copy repository files
