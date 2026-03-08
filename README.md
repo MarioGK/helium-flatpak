@@ -24,11 +24,6 @@ flatpak remote-add --user --if-not-exists helium https://mariogk.github.io/heliu
 flatpak install --user helium net.imput.helium
 ```
 
-**Or use the flatpakref file for one-click install:**
-```bash
-flatpak install --user https://mariogk.github.io/helium-flatpak/helium.flatpakref
-```
-
 ### Option 2: Install from Bundle
 
 Download the latest `.flatpak` bundle from the [**Releases Page**](https://github.com/MarioGK/helium-flatpak/releases) and install it:
