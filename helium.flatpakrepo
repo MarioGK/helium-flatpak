@@ -1,6 +1,6 @@
 [Flatpak Repo]
 Title=Helium Browser
-Url=https://mariogk.github.io/helium-flatpak/repo/
+Url=https://mariogk.github.io/helium-flatpak/
 Homepage=https://github.com/MarioGK/helium-flatpak
 Comment=Private, fast, and honest web browser
 Description=Helium browser Flatpak repository - Private, fast, and honest web browser based on Ungoogled Chromium
