@@ -87,13 +87,13 @@ modules:
     sources:
       - type: file
         only-arches: [x86_64]
-        url: https://github.com/imputnet/helium-linux/releases/download/0.11.2.1/helium-0.11.2.1-x86_64_linux.tar.xz
-        sha256: ee6e23d2bd7240fe67db0c3ffbde3b7df47f3e57193e0bd3dbd4b2068feacd9c
+        url: https://github.com/imputnet/helium-linux/releases/download/0.11.3.2/helium-0.11.3.2-x86_64_linux.tar.xz
+        sha256: 0cc832d4d1f6fa1bb30c6c92942a8da608fb2672ede0eb6051e0a3c4c096bc5b
         dest-filename: helium-linux.tar.xz
       - type: file
         only-arches: [aarch64]
-        url: https://github.com/imputnet/helium-linux/releases/download/0.11.2.1/helium-0.11.2.1-arm64_linux.tar.xz
-        sha256: 75f281ccf9f73bc919443ccfadc2bae147f480ef4a8ae40ce50311fc6daec89b
+        url: https://github.com/imputnet/helium-linux/releases/download/0.11.3.2/helium-0.11.3.2-arm64_linux.tar.xz
+        sha256: a7dc22b9a2ad4001c02f8c43152a6e878de67f9fb4cb8a64596e6daca14cb1dc
         dest-filename: helium-linux.tar.xz
         
       - type: file
